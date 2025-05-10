@@ -2,6 +2,7 @@ import requests
 import pandas as pd
 import os
 import numpy as np
+from datetime import datetime, date
 import time
 import openmeteo_requests
 import requests_cache
@@ -11,10 +12,14 @@ import ipywidgets as widgets
 from IPython.display import display
 import seaborn as sns
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+import matplotlib.colors as mcolors
 from matplotlib import cm as mpl_cm
 from matplotlib.colors import Normalize
 from statsmodels.tsa.holtwinters import ExponentialSmoothing, SimpleExpSmoothing
 import statsmodels.api as sm
+from matplotlib.ticker import ScalarFormatter
+from statsmodels.tsa.stattools import adfuller
 
 def interactive_choropleth_by_year(df, value_column, title_prefix='Number of Colonies'):
     """
@@ -165,30 +170,30 @@ def analyze_state_data(bees, state_name):
     # Ensure data is sorted by date
     bees = bees.sort_index()
 
-    # Filter for the specified state and drop rows with missing values in 'num_colonies'
-    bees_state = bees[bees['state'] == state_name].dropna(subset=['num_colonies'])
+    # Filter for the specified state and drop rows with missing values in 'percent_lost'
+    bees_state = bees[bees['state'] == state_name].dropna(subset=['percent_lost'])
 
     # Explicitly set the frequency to quarterly data (quarterly start)
     bees_state.index = pd.to_datetime(bees_state.index)
 
     # Apply Simple Exponential Smoothing (SES)
-    ses_model = SimpleExpSmoothing(bees_state['num_colonies'])
+    ses_model = SimpleExpSmoothing(bees_state['percent_lost'])
     ses_fit = ses_model.fit()
 
     # Apply Exponential Smoothing (Holt-Winters) with additive trend and seasonality
-    holt_winters_model_additive = ExponentialSmoothing(bees_state['num_colonies'], trend='add', seasonal='add', seasonal_periods=4)
+    holt_winters_model_additive = ExponentialSmoothing(bees_state['percent_lost'], trend='add', seasonal='add', seasonal_periods=4)
     holt_winters_fit_additive = holt_winters_model_additive.fit()
 
     # Apply Exponential Smoothing (Holt-Winters) with multiplicative trend and additive seasonality
-    holt_winters_model_multiplicative_trend = ExponentialSmoothing(bees_state['num_colonies'], trend='mul', seasonal='add', seasonal_periods=4)
+    holt_winters_model_multiplicative_trend = ExponentialSmoothing(bees_state['percent_lost'], trend='mul', seasonal='add', seasonal_periods=4)
     holt_winters_fit_multiplicative_trend = holt_winters_model_multiplicative_trend.fit()
 
     # Apply Exponential Smoothing (Holt-Winters) with additive trend and multiplicative seasonality
-    holt_winters_model_additive_seasonality = ExponentialSmoothing(bees_state['num_colonies'], trend='add', seasonal='mul', seasonal_periods=4)
+    holt_winters_model_additive_seasonality = ExponentialSmoothing(bees_state['percent_lost'], trend='add', seasonal='mul', seasonal_periods=4)
     holt_winters_fit_additive_seasonality = holt_winters_model_additive_seasonality.fit()
 
     # Apply Exponential Smoothing (Holt-Winters) with multiplicative trend and seasonality
-    holt_winters_model_multiplicative_seasonality = ExponentialSmoothing(bees_state['num_colonies'], trend='mul', seasonal='mul', seasonal_periods=4)
+    holt_winters_model_multiplicative_seasonality = ExponentialSmoothing(bees_state['percent_lost'], trend='mul', seasonal='mul', seasonal_periods=4)
     holt_winters_fit_multiplicative_seasonality = holt_winters_model_multiplicative_seasonality.fit()
 
     # Set Seaborn style
@@ -198,7 +203,7 @@ def analyze_state_data(bees, state_name):
     plt.figure(figsize=(12, 6))
 
     # Use sns.lineplot for each series
-    sns.lineplot(x=bees_state.index, y=bees_state['num_colonies'], label='Original Data', color='black')
+    sns.lineplot(x=bees_state.index, y=bees_state['percent_lost'], label='Original Data', color='black')
     sns.lineplot(x=bees_state.index, y=ses_fit.fittedvalues, label='Simple Exponential Smoothing (SES)', color='blue')
     sns.lineplot(x=bees_state.index, y=holt_winters_fit_additive.fittedvalues, label='Exponential Smoothing (Holt-Winters - Additive)', color='green')
     sns.lineplot(x=bees_state.index, y=holt_winters_fit_multiplicative_trend.fittedvalues, label='Exponential Smoothing (Holt-Winters - Mul Trend)', color='red')
@@ -206,9 +211,9 @@ def analyze_state_data(bees, state_name):
     sns.lineplot(x=bees_state.index, y=holt_winters_fit_multiplicative_seasonality.fittedvalues, label='Exponential Smoothing (Holt-Winters - Mul Seasonality)', color='orange')
 
     # Customize plot
-    plt.title(f'Time Series with Smoothing Methods for "num_colonies" ({state_name})', fontsize=14)
+    plt.title(f'Time Series with Smoothing Methods for "percent_lost" ({state_name})', fontsize=14)
     plt.xlabel('Date', fontsize=12)
-    plt.ylabel('num_colonies', fontsize=12)
+    plt.ylabel('percent_lost', fontsize=12)
 
     # Set x-axis limits to zoom from 2015-Q1 to 2018-Q4
     plt.xlim(pd.to_datetime('2015-01-01'), pd.to_datetime('2018-12-31'))
@@ -228,9 +233,9 @@ def analyze_state_data(bees, state_name):
 # Example usage: analyze data for 'New York'
 # analyze_state_data(bees, 'New York')
 
-def plot_num_colonies_over_time(dataset, state):
+def plot_percent_lost_over_time(dataset, state):
     plt.figure(figsize=(12, 6))
-    plt.plot(dataset[dataset['state'] == state].index, dataset[dataset['state'] == state]['num_colonies'], label='Num Colonies')
+    plt.plot(dataset[dataset['state'] == state].index, dataset[dataset['state'] == state]['percent_lost'], label='Num Colonies')
     plt.title(f'Number of Bee Colonies Over Time in {state}')
     plt.xlabel('Date')
     plt.ylabel('Number of Bee Colonies')
@@ -240,7 +245,7 @@ def plot_num_colonies_over_time(dataset, state):
 
 def heatmap_colonies_over_time(bees, state):
     """
-    Creates a heatmap for num_colonies over time for a specific US state,
+    Creates a heatmap for percent_lost over time for a specific US state,
     with dynamically colored annotations for legibility.
     """
 
@@ -251,7 +256,7 @@ def heatmap_colonies_over_time(bees, state):
     state_data['Quarter'] = 'Q' + state_data['quarter'].astype(str)
 
     # Pivot table: rows = years, columns = quarters
-    cm_data = state_data.pivot(index='year', columns='Quarter', values='num_colonies')
+    cm_data = state_data.pivot(index='year', columns='Quarter', values='percent_lost')
 
     # Reorder columns to Q1–Q4
     cm_data = cm_data.reindex(columns=['Q1', 'Q2', 'Q3', 'Q4'])
@@ -289,3 +294,287 @@ def heatmap_colonies_over_time(bees, state):
     plt.ylabel('Year')
     plt.tight_layout()
     plt.show()
+
+
+def plot_bee_colony_trends(bees, state):
+    # Filter data for the selected state and create time column
+    state_data = bees[bees['state'] == state].copy()
+    state_data['time'] = state_data['year'].astype(str) + ' Q' + state_data['quarter'].astype(str)
+
+    # Sort time
+    state_data = state_data.sort_values(by=['year', 'quarter'])
+
+    # Get middle color from Viridis colormap
+    viridis_middle_color = cm.viridis(0.5)  # RGBA tuple
+    hex_color = mcolors.to_hex(viridis_middle_color)  # Convert RGBA to Hex
+
+    # Plot
+    plt.figure(figsize=(15, 6))
+    plt.plot(state_data['time'], state_data['percent_lost'], marker='o', color=hex_color, label='Percent Lost Colonies')
+
+    # Customize plot
+    plt.title(f'Percent Lost Bee Colonies Over Time in {state}', fontsize=14)
+    plt.xlabel('Time (Year - Quarter)', labelpad=15)
+    plt.ylabel('Percent Lost Colonies', labelpad=15)
+    plt.xticks(rotation=90, fontsize=10)  # Rotate x-axis labels
+    plt.ticklabel_format(style='plain', axis='y')  # Set y-axis to plain notation
+    plt.grid(True, color='lightgray', linestyle='--', linewidth=0.6)  # Lighten gridlines
+    plt.legend()
+
+    plt.tight_layout()
+    plt.show()
+
+def plot_percent_loss_by_quarter(bees, state):
+    """
+    Plots percent colony loss by quarter for a given state.
+
+    Parameters:
+        bees (pd.DataFrame): The full bees dataset.
+        state (str): The state to filter for.
+    """
+    state_data = bees[bees['state'] == state]
+
+    plt.figure(figsize=(12, 6))
+    sns.boxplot(x='quarter', y='percent_lost', data=state_data, color='yellow')
+    plt.title(f'Percent Lost Bee Colonies by Quarter in {state}')
+    plt.xlabel('Quarter')
+    plt.ylabel('Percent Lost Bee Colonies')
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_stressors_by_quarter(bees, state, bee_stressor_palette=None):
+    """
+    Plots stressors affecting bee colonies by quarter for a given state.
+
+    Parameters:
+        bees (pd.DataFrame): The full bees dataset.
+        state (str): The state to filter for.
+        bee_stressor_palette (dict, optional): Custom color palette for stressors.
+    """
+    stressors = ['varroa_mites', 'other_pests_and_parasites', 'diseases', 'pesticides', 'other_or_unknown']
+    state_data = bees[bees['state'] == state]
+
+    melted_stressors = state_data.melt(
+        id_vars=['quarter'],
+        value_vars=stressors,
+        var_name='Stressor',
+        value_name='Value'
+    )
+
+    plt.figure(figsize=(12, 6))
+    sns.boxplot(x='quarter', y='Value', hue='Stressor', data=melted_stressors, palette=bee_stressor_palette)
+    plt.title(f'Stressors by Quarter in {state}')
+    plt.xlabel('Quarter')
+    plt.ylabel('Percentage of Colonies Affected')
+    plt.legend(title='Stressor', bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.tight_layout()
+    plt.show()
+
+def plot_drought_by_quarter(bees, state):
+    """
+    Plots drought severity levels by quarter for a given state.
+
+    Parameters:
+        bees (pd.DataFrame): The full bees dataset.
+        state (str): The state to filter for.
+    """
+    drought_cols = [
+        'D0_mean', 'D1_mean', 'D2_mean', 'D3_mean', 'D4_mean',
+        'D0_max', 'D1_max', 'D2_max', 'D3_max', 'D4_max'
+    ]
+
+    # Check for presence of required columns
+    missing = [col for col in drought_cols if col not in bees.columns]
+    if missing:
+        raise ValueError(f"The following drought columns are missing: {missing}")
+
+    # Filter and reshape
+    state_data = bees[bees['state'] == state]
+    melted_drought = state_data.melt(
+        id_vars='quarter',
+        value_vars=drought_cols,
+        var_name='Drought_Level',
+        value_name='Value'
+    )
+
+    # Plot
+    plt.figure(figsize=(14, 6))
+    sns.boxplot(x='quarter', y='Value', hue='Drought_Level', data=melted_drought)
+    plt.title(f'Drought Severity by Quarter in {state}')
+    plt.xlabel('Quarter')
+    plt.ylabel('Severity Index')
+    plt.legend(title='Drought Level', bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_weather_conditions_by_quarter(bees, state):
+    """
+    Plots weather condition sums by quarter for a given state.
+
+    Parameters:
+        bees (pd.DataFrame): The full bees dataset.
+        state (str): The state to filter for.
+    """
+    weather_cols = [
+        'moderate_drizzle_sum', 'moderate_rain_sum', 'light_rain_sum', 'heavy_rain_sum',
+        'overcast_sum', 'partly_cloudy_sum', 'clear_sky_sum', 'light_drizzle_sum',
+        'mainly_clear_sum', 'heavy_drizzle_sum', 'light_snow_sum',
+        'heavy_snow_sum', 'moderate_snow_sum'
+    ]
+
+    # Check for presence of columns
+    missing = [col for col in weather_cols if col not in bees.columns]
+    if missing:
+        raise ValueError(f"The following required columns are missing: {missing}")
+
+    # Filter and reshape data
+    state_data = bees[bees['state'] == state]
+    melted_weather = state_data.melt(
+        id_vars='quarter',
+        value_vars=weather_cols,
+        var_name='Condition',
+        value_name='Sum_Hours'
+    )
+
+    # Plot
+    plt.figure(figsize=(14, 6))
+    sns.boxplot(x='quarter', y='Sum_Hours', hue='Condition', data=melted_weather)
+    plt.title(f'Weather Conditions by Quarter in {state}')
+    plt.xlabel('Quarter')
+    plt.ylabel('Sum of Hours')
+    plt.legend(title='Condition', bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.tight_layout()
+    plt.show()
+
+
+   
+def plot_precipitation_by_quarter(bees, state):
+    """
+    Plots precipitation hours by quarter for a given state.
+
+    Parameters:
+        bees (pd.DataFrame): The full bees dataset.
+        state (str): The state to filter for.
+    """
+    if 'precipitation_hours_sum' not in bees.columns:
+        raise ValueError("'precipitation_hours_sum' column not found in dataset.")
+
+    state_data = bees[bees['state'] == state]
+
+    plt.figure(figsize=(10, 6))
+    sns.boxplot(x='quarter', y='precipitation_hours_sum', data=state_data, color='lightblue')
+    plt.title(f'Precipitation Hours by Quarter in {state}')
+    plt.xlabel('Quarter')
+    plt.ylabel('Precipitation Hours (Sum)')
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_temperature_features_by_quarter(bees, state):
+    """
+    Plots temperature-related features by quarter for a given state.
+
+    Parameters:
+        bees (pd.DataFrame): The full bees dataset.
+        state (str): The state to filter for.
+    """
+    temp_features = [
+        'temperature_2m_meanmean', 'temperature_2m_meansum',
+        'temperature_2m_maxmax', 'temperature_2m_minmin'
+    ]
+    state_data = bees[bees['state'] == state]
+
+    melted_temp = state_data.melt(
+        id_vars=['quarter'],
+        value_vars=[col for col in temp_features if col in state_data.columns],
+        var_name='Temperature Metric',
+        value_name='Value'
+    )
+
+    plt.figure(figsize=(12, 6))
+    sns.boxplot(x='quarter', y='Value', hue='Temperature Metric', data=melted_temp)
+    plt.title(f'Temperature Metrics by Quarter in {state}')
+    plt.xlabel('Quarter')
+    plt.ylabel('Temperature (°C)')
+    plt.legend(title='Temperature Metric', bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_colony_timeseries(state_bees, column, state, rolling_window=4):
+    """
+    Plots time series data with rolling mean and standard deviation.
+
+    Parameters:
+        state_bees (DataFrame): Data containing 'date' and the column to analyze.
+        column (str): The name of the column to plot (e.g., 'num_colonies').
+        state (str): The name of the state for the plot title.
+        rolling_window (int): Number of periods for the rolling window. Default is 4.
+    """
+    fig, ax = plt.subplots(figsize=(12, 4))
+
+    sns.lineplot(x=state_bees['date'], y=state_bees[column], ax=ax, color='dodgerblue', label='raw data')
+    sns.lineplot(x=state_bees['date'], y=state_bees[column].rolling(rolling_window).mean(), ax=ax, color='black', label='rolling mean')
+    sns.lineplot(x=state_bees['date'], y=state_bees[column].rolling(rolling_window).std(), ax=ax, color='orange', label='rolling std')
+
+    ax.set_title(f'{column.replace("_", " ").title()} for {state}: Non-stationary \nCheck if data is stationary or not', fontsize=14)
+    ax.set_ylabel(column.replace("_", " ").title(), fontsize=14)
+    ax.set_xlim([date(2015, 1, 1), date(2022, 10, 1)])
+
+    # Disable scientific notation on y-axis
+    ax.yaxis.set_major_formatter(ScalarFormatter(useMathText=False))
+    ax.ticklabel_format(style='plain', axis='y')
+
+    plt.tight_layout()
+    plt.show()    
+
+def adf_test(series, state):
+    """
+    Pass in a time series and a state, returns an ADF report
+    """
+    title = state
+    print(f'Augmented Dickey-Fuller Test: {title}')
+    result = adfuller(series.dropna(),autolag='AIC') # .dropna() handles differenced data
+    
+    labels = ['ADF test statistic','p-value','# lags used','# observations']
+    out = pd.Series(result[0:4],index=labels)
+
+    for key,val in result[4].items():
+        out[f'critical value ({key})']=val
+        
+    print(out.to_string())          # .to_string() removes the line "dtype: float64"
+    
+    if result[1] <= 0.05:
+        print("Data is stationary")
+    else:
+        print("Data is non-stationary")
+
+
+# subset dataframe to only have rows of state of interest
+def subset_by_state(state_bees, state):
+    """
+    Returns rows from the DataFrame corresponding to a given U.S. state.
+    If the state is not found, prints a message and returns None.
+    """
+    if state not in state_bees['state'].unique():
+        print(f"Information for the state '{state}' is unavailable.")
+        return None
+    return state_bees[state_bees['state'] == state]
+
+
+def create_quarterly_index(state_bees):
+    """
+    Converts 'year' and 'quarter' columns in a DataFrame to a datetime index
+    representing the start of each quarter.
+
+    Returns a DataFrame with the new index.
+    """
+    if not {'year', 'quarter'}.issubset(state_bees.columns):
+        raise ValueError("DataFrame must contain 'year' and 'quarter' columns.")
+    
+    # Create a quarterly period index
+    state_bees = state_bees.copy()
+    state_bees['date'] = pd.to_datetime(state_bees['year'].astype(str) + 'Q' + state_bees['quarter'].astype(str))
+    return state_bees
