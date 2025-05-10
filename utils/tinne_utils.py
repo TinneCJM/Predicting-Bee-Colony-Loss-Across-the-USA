@@ -532,24 +532,21 @@ def plot_colony_timeseries(state_bees, column, state, rolling_window=4):
 
 def adf_test(series, state):
     """
-    Pass in a time series and a state, returns an ADF report
+    Perform Augmented Dickey-Fuller test and return a Series with results.
     """
-    title = state
-    print(f'Augmented Dickey-Fuller Test: {title}')
-    result = adfuller(series.dropna(),autolag='AIC') # .dropna() handles differenced data
+    result = adfuller(series.dropna(), autolag='AIC')
     
-    labels = ['ADF test statistic','p-value','# lags used','# observations']
-    out = pd.Series(result[0:4],index=labels)
+    labels = ['ADF test statistic', 'p-value', '# lags used', '# observations']
+    out = pd.Series(result[0:4], index=labels)
 
-    for key,val in result[4].items():
-        out[f'critical value ({key})']=val
-        
-    print(out.to_string())          # .to_string() removes the line "dtype: float64"
+    # Add critical values
+    for key, val in result[4].items():
+        out[f'critical value ({key})'] = val
+
+    # Add stationary flag
+    out['stationary'] = result[1] <= 0.05
     
-    if result[1] <= 0.05:
-        print("Data is stationary")
-    else:
-        print("Data is non-stationary")
+    return out
 
 
 # subset dataframe to only have rows of state of interest
