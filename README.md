@@ -1,6 +1,34 @@
+# Data Science Thesis Project May 2025
+
+This project aims to forecast the loss of bee colonies over time.
+
+## Getting Started
+
+These instructions will get you a copy of the project up and running on your local machine for project evaluation.
+
+### Prerequisites
+
+What things you need to install the software and how to install them:
+
+- Anaconda or Miniconda
+- Python 3.11
+
+### Environment Setup
+
+A step by step explanation to get the provided notebook and environment running:
+
+1. Clone the repo: `git clone https://github.com/TinneCJM/Bees.git`
+2. Navigate to the project directory: `cd your_project`
+3. Install the provided conda environment: `conda env create -f environment.yml`
+4. Activate the new environment: `conda activate your_env_name`
+5. Open the Jupyter notebook: `jupyter notebook your_notebook.ipynb`
+
+**Note:** Replace `your_env_name` with the name of your conda environment, and `your_notebook.ipynb` with the name of your Jupyter notebook.
+
+
 ## Introduction: Predicting Bee Colonie Loss for US states
 
-Welcome to this comprehensive and hands-on journey where we explore the **loss of bee colonies** across varies US states using **forecasting** techniques. Various datasets are combined with the base bees data being collected from **Kaggle**, historical weather data from **Open Meteo API** and historical drought data from **National Integrated Drought Information System (NIDIS)**. The overall goal is to **collect, combine, clean, validate and build forecasting models** using a variety of machine learning models.
+Welcome to this comprehensive and hands-on journey where we explore the **loss of bee colonies** across varies US states using **forecasting** techniques. The bees dataset is collected from two surveys per year targeting beekeepers who manage five or more bee colonies. These surveys gathered information on number of colonies, colony losses, colony additions and bee health stressors. This data from 2015 up to 2022 is available on **Kaggle**. Weather and drought data is combined with the base bees data: historical weather data from **Open Meteo API** and historical drought data from **National Integrated Drought Information System (NIDIS)**. The overall goal is to **collect, combine, clean, validate and build forecasting models** using a variety of machine learning models.
 
 The notebooks are structered chronologically starting with data collection and cleaning, followed by validation and imputation of missing data, exploratory data analysis and finally, forecasting models.
 
@@ -8,39 +36,29 @@ The notebooks are structered chronologically starting with data collection and c
 
 ## Notebooks overview
 
-### ![alt text](bee.png) 1a Fetch weather data
-- Perform a thorough **EDA (Exploratory Data Analysis)**.
-- Assess the integrity of SMILES: **standardization, sanitization, neutralization**.
-- Ensure there are **no duplicates or obvious data quality issues**.
+###  🐝 1a Fetch weather data
+- Extract daily weather data through **Open Meteo API**.
+- Calls are made on US state latitude/longitude combinations provided by ChatGPT.
+- API calls are performed in chunks over time due to API call restrictions.
 
-### ![alt text](bee.png) 1b Process weather data
-- Use **Tanimoto similarity** to evaluate whether molecules in training and validation/test sets are structurally similar.
-- Recreate the split using **Bemis–Murcko scaffolds** to assess scaffold-based evaluation strategies.
-- Explore the implications of split quality on **data leakage** and **true generalization**.
+### 🐝 1b Process weather data
+- Daily weather data is **condensed to quarterly** data.
+- Weather feature aggregations have been made.
 
-### ![alt text](bee.png) 1c process aggricultural data
-- Explore the power of different **fingerprints and descriptors**: MACCS, Morgan, Mol2Vec, Mordred, Padel, and RDKit.
-- Evaluate them individually and in combination to understand their unique and shared contributions to prediction performance.
+### 🐝 1c process drought data
+- 
 
-### ![alt text](bee.png) 1d process drought data
-- Compare the performance of **Linear Regression, Ridge, Lasso, SVR, Random Forest, LightGBM, CatBoost, and XGBoost**.
-- Assess models across **raw**, **MinMax normalized**, and **standardized** feature sets.
-- Tune hyperparameters and identify the most performant model configuration.
+### 🐝 2a combine datasets
+- 
 
-### ![alt text](bee.png) 2a combine datasets
-- Understand **which features and descriptors matter most**.
-- Explore why **descriptor-based features often outperform fingerprints**, and what this tells us about molecular representation.
+### 🐝 2b impute missing data
+- .
 
-### ![alt text](bee.png) 2b impute missing data
-- Benchmark against a recent XGBoost implementation trained on the same dataset.
-- Discuss key methodological differences such as **data splitting strategies** and **feature sets**.
+### 🐝 3 Exploratory data analysis
+- 
 
-### ![alt text](bee.png) 3 Exploratory data analysis
-- Use **PCA** to visually assess the spread and overlap of training and test molecules.
-- Gain insights into **chemical diversity** and how well your model might generalize in practice.
-
-### ![alt text](bee.png) 4 Forecasting models
-- Use **PCA** to visually assess the spread and overlap of training and test molecules.
-- Gain insights into **chemical diversity** and how well your model might generalize in practice.
+### 🐝 4 Forecasting models
+- 
 
 ---
+
