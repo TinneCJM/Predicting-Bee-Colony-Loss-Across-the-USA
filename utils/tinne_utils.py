@@ -481,8 +481,9 @@ def plot_temperature_features_by_quarter(bees, state):
         state (str): The state to filter for.
     """
     temp_features = [
-        'temperature_2m_meanmean', 'temperature_2m_meansum',
-        'temperature_2m_maxmax', 'temperature_2m_minmin'
+        'temperature_2m_mean', 
+        'temperature_2m_max', 
+        'temperature_2m_min'
     ]
     state_data = bees[bees['state'] == state]
 
