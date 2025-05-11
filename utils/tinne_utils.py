@@ -29,34 +29,46 @@ def set_bee_style():
     """
     Sets Matplotlib rcParams for a bee-inspired color palette and grid style.
     """
-    # your bee palette (example hex codes)
-    bee_colors = ['#E69F00', '#56B4E9', '#009E73', 
-                  '#F0E442', '#0072B2', '#D55E00', '#CC79A7']
+
+    bee_colors = [
+    # Bee-inspired
+    "#F2C94C",  # honey yellow
+    # Flower-inspired
+    "#E91E63",  # rose pink
+    # Nature-inspired
+    "#3498DB",  # sky blue
+
+    "#7B3F00",  # soil brown
+    "#e39db4",  # light magenta
+    "#2ECC71",  # leaf green
+
+    "#2C3E50",  # charcoal black
+    "#9B59B6",  # lavender
+    "#027031",  # forest green
+
+    "#E67E22",  # pumpkin orange
+    "#FF6F61",  # coral
+    "#F39C12",  # amber
+
+    "#F4D03F",  # gold
+    "#8E44AD",  # violet
+    "#95A5A6"   # slate gray
+    ]
     
-    mpl.rcParams['axes.prop_cycle'] = cycler('color', bee_colors)
-    mpl.rcParams['figure.facecolor'] = 'white'
-    mpl.rcParams['axes.facecolor']   = 'white'
-    mpl.rcParams['grid.color']       = '0.85'
-    mpl.rcParams['grid.linestyle']   = '--'
-    mpl.rcParams['grid.linewidth']   = 0.5
-    mpl.rcParams['axes.titlesize']   = 14
-    mpl.rcParams['axes.labelsize']   = 12
-    mpl.rcParams['xtick.labelsize']  = 10
-    mpl.rcParams['ytick.labelsize']  = 10
-    mpl.rcParams['legend.frameon']   = False
+    mpl.rcParams['axes.prop_cycle']   = cycler('color', bee_colors)
+    mpl.rcParams['figure.facecolor']  = 'white'
+    mpl.rcParams['axes.facecolor']    = 'white'
+    mpl.rcParams['axes.grid']         = True               # turn on grid by default
+    mpl.rcParams['grid.color']        = '0.5'              # very light gray
+    mpl.rcParams['grid.linestyle']    = '--'               # dashed lines
+    mpl.rcParams['grid.linewidth']    = 0.5                # thin lines
+    mpl.rcParams['grid.alpha']        = 0.3                # lighten even more with transparency
 
-def set_bee_style_and_quarters():
-    set_bee_style()           # your existing bee‐colors rcParams
-    import matplotlib.dates as mdates
-    import matplotlib.pyplot as plt
-
-    # monkey‐patch plt.subplots to always call format_quarterly_axis
-    real_subplots = plt.subplots
-    def tweaked_subplots(*args, **kwargs):
-        fig, ax = real_subplots(*args, **kwargs)
-        format_quarterly_axis(ax)
-        return fig, ax
-    plt.subplots = tweaked_subplots
+    mpl.rcParams['axes.titlesize']    = 14
+    mpl.rcParams['axes.labelsize']    = 12
+    mpl.rcParams['xtick.labelsize']   = 10
+    mpl.rcParams['ytick.labelsize']   = 10
+    mpl.rcParams['legend.frameon']    = False
 
 def interactive_choropleth_by_year(
     df: pd.DataFrame,
