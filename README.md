@@ -19,7 +19,7 @@ A step by step explanation to get the provided notebook and environment running:
 
 1. Clone the repo: `git clone https://github.com/TinneCJM/Bees.git`
 2. Navigate to the project directory: `cd your_project`
-3. Install the provided conda environment: `conda env create -f environment.yml`
+3. Install the provided conda environment: `conda env create -f environment.yaml`
 4. Activate the new environment: `conda activate your_env_name`
 5. Open the Jupyter notebook: `jupyter notebook your_notebook.ipynb`
 
@@ -46,19 +46,26 @@ The notebooks are structered chronologically starting with data collection and c
 - Weather feature aggregations have been made.
 
 ### 🐝 1c process drought data
-- 
+- Weekly drought data is **condensed to quarterly** data.
+- Drought feature aggregations have been made.
 
 ### 🐝 2a combine datasets
-- 
+- Weather, drought and bees data is combined.
+- Checks are made for missing data.
 
 ### 🐝 2b impute missing data
-- .
+- Bee related data for quarter 2 from 2019 has to be **imputed**.
+- Full dataset is validated for missing data.
 
 ### 🐝 3 Exploratory data analysis
-- 
+- The main feature of interest is explored into detail.
+- Correlations to feature of interest are investigated.
+- Various features are plotted per quarter.
 
 ### 🐝 4 Forecasting models
-- 
+- Time Series Forecasting is done both in a **static and walk-forward** manner.
+- RMSE and MAE are evaluated for various models
+- Classical ML models with lag features and forecasting models are used.
 
 ---
 
