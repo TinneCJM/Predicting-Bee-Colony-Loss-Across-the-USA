@@ -20,10 +20,10 @@ A step by step explanation to get the provided notebook and environment running:
 1. Clone the repo: `git clone https://github.com/TinneCJM/Bees.git`
 2. Navigate to the project directory: `cd your_project`
 3. Install the provided conda environment: `conda env create -f environment.yaml`
-4. Activate the new environment: `conda activate your_env_name`
-5. Open the Jupyter notebook: `jupyter notebook your_notebook.ipynb`
+4. Activate the new environment: `conda activate environment`
+5. Open the Jupyter notebook: `jupyter notebook notebook_of_interest.ipynb`
 
-**Note:** Replace `your_env_name` with the name of your conda environment, and `your_notebook.ipynb` with the name of your Jupyter notebook.
+**Note:** Replace `notebook_of_interest.ipynb` with the name of your Jupyter notebook you want to open.
 
 
 ## Introduction: Predicting Bee Colonie Loss for US states
@@ -45,15 +45,19 @@ The notebooks are structered chronologically starting with data collection and c
 - Daily weather data is **condensed to quarterly** data.
 - Weather feature aggregations have been made.
 
-### 🐝 1c process drought data
+### 🐝 1c Process drought data
 - Weekly drought data is **condensed to quarterly** data.
 - Drought feature aggregations have been made.
 
-### 🐝 2a combine datasets
+### 🐝 1d Process Bee data
+- Bees data is investigated.
+- Unknown and other columns are condensed.
+
+### 🐝 2a Combine datasets
 - Weather, drought and bees data is combined.
 - Checks are made for missing data.
 
-### 🐝 2b impute missing data
+### 🐝 2b Impute missing data
 - Bee related data for quarter 2 from 2019 has to be **imputed**.
 - Full dataset is validated for missing data.
 
